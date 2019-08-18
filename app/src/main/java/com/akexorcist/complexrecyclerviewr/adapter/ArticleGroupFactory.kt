@@ -28,9 +28,12 @@ class ArticleGroupFactory(
     ): ArrayList<in ComplexAdapter.Item<ArticleGroupResult.Group, ComplexAdapter.State, RecyclerView.ViewHolder>> {
         val itemList: ArrayList<Any> = arrayListOf()
         if (data.topicList?.isNotEmpty() == true) {
-            itemList.add(ArticleGroupItem(data, ArticleGroupState(false), ArticleGroupViewHolder::class.java))
-            data.topicList?.forEach { topic ->
-                itemList.add(ArticleTopicItem(topic, ArticleTopicState(data.id, false), ArticleTopicViewHolder::class.java))
+            val expandState = if (oldItemList != null) (oldItemList[0] as ArticleGroupItem).state.isExpand else false
+            itemList.add(ArticleGroupItem(data, ArticleGroupState(expandState), ArticleGroupViewHolder::class.java))
+            if (oldItemList != null && (oldItemList[0] as ArticleGroupItem).state.isExpand) {
+                data.topicList?.forEach { topic ->
+                    itemList.add(ArticleTopicItem(topic, ArticleTopicState(data.id), ArticleTopicViewHolder::class.java))
+                }
             }
         }
         return itemList
@@ -74,60 +77,53 @@ class ArticleGroupFactory(
         this.listener = listener
     }
 
-    fun toggleGroup(position: Int) {
-        updateGroup { index, _ -> index == position }
-        getArticleGroupItemList()[position].let { groupItem ->
-            updateTopic(groupItem.data?.id, groupItem.state.isExpand)
-        }
+    fun toggleGroup() {
+        updateGroup(
+            onChange = { item -> !item.state.isExpand },
+            onChanged = { refresh() }
+        )
     }
 
-    fun toggleGroup(groupItem: ArticleGroupItem) {
-        updateGroup { _, item -> item == groupItem }
-        updateTopic(groupItem.data?.id, groupItem.state.isExpand)
+    fun expandGroup() {
+        updateGroup(
+            onChange = { true },
+            onChanged = { refresh() }
+        )
     }
 
-    private fun updateGroup(condition: (Int, ArticleGroupItem) -> Boolean) {
-        getArticleGroupItemList().forEachIndexed { index, item ->
-            if (condition(index, item)) {
-                item.state.isExpand = !item.state.isExpand
-            } else {
-                item.state.isExpand = false
+    fun collapseGroup() {
+        updateGroup(
+            onChange = { false },
+            onChanged = { refresh() }
+        )
+    }
+
+    private fun updateGroup(onChange: (ArticleGroupItem) -> Boolean, onChanged: () -> Unit) {
+        getArticleGroupItem()?.let { item ->
+            item as ArticleGroupItem
+            val newState = onChange(item)
+            if (item.state.isExpand != newState) {
+                item.state.isExpand = newState
+                onChanged.invoke()
             }
         }
     }
 
-    private fun updateTopic(groupId: String?, isExpand: Boolean) {
-        getArticletTopicItemList().forEach { item ->
-            if (item.state.groupId == groupId) {
-                item.state.isExpand = isExpand
-            } else {
-                item.state.isExpand = false
-            }
-        }
-    }
-
-    private fun getArticleGroupItemList() =
-        itemList.filter { item -> item is ArticleGroupItem }
-            .map { item -> item as ArticleGroupItem }
-
-    private fun getArticletTopicItemList() =
-        itemList.filter { item -> item is ArticleTopicItem }
-            .map { item -> item as ArticleTopicItem }
+    private fun getArticleGroupItem() = itemList.find { item -> item is ArticleGroupItem }
 
     private fun setupGroupView(holder: ArticleGroupViewHolder, item: ArticleGroupItem) {
         holder.setName(item.data?.name)
         holder.setExpandState(item.state.isExpand)
-        holder.setGroupClick { listener?.onGroupClick(item) }
+        holder.setGroupClick { listener?.onGroupClick(item, this) }
     }
 
     private fun setupTopicView(holder: ArticleTopicViewHolder, item: ArticleTopicItem) {
         holder.setTitle(item.data?.title)
-        holder.setExpand(item.state.isExpand)
         holder.setTopicClick { listener?.onTopicClick(item) }
     }
 
     interface Listener {
-        fun onGroupClick(item: ArticleGroupItem)
+        fun onGroupClick(item: ArticleGroupItem, factory: ArticleGroupFactory)
         fun onTopicClick(item: ArticleTopicItem)
     }
 }

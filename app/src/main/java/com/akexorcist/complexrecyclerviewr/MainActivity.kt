@@ -9,7 +9,6 @@ import com.akexorcist.complexrecyclerviewr.adapter.article.category.ArticleCateg
 import com.akexorcist.complexrecyclerviewr.adapter.article.group.ArticleGroupItem
 import com.akexorcist.complexrecyclerviewr.adapter.article.topic.ArticleTopicItem
 import com.akexorcist.complexrecyclerviewr.api.MockApi
-import com.akexorcist.library.complexrecyclerview.core.ComplexAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : com.akexorcist.library.complexrecyclerview.core.StateHandleHelperActivity() {
@@ -19,11 +18,7 @@ class MainActivity : com.akexorcist.library.complexrecyclerview.core.StateHandle
             setListener(articleCategoryListener)
         }
     }
-    private val groupFactory: ArticleGroupFactory by lazy {
-        ArticleGroupFactory(stateHandler).apply {
-            setListener(articleGroupListener)
-        }
-    }
+    private var groupFactoryList: ArrayList<ArticleGroupFactory> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,12 +35,12 @@ class MainActivity : com.akexorcist.library.complexrecyclerview.core.StateHandle
         // ถ้าจัดการพวก Load More ได้ง่ายๆด้วย จะดีมาก
         // ถ้ารองรับกับ Sticky Header ก็ดีนะ
 
-        val factoryList: ArrayList<in ComplexAdapter.Factory<Any>> = arrayListOf(
-            profileFactory,
-            categoryFactory,
-            groupFactory
+        recyclerView.setFactoryList(
+            arrayListOf(
+                profileFactory,
+                categoryFactory
+            )
         )
-        recyclerView.setFactoryList(factoryList)
         getProfile()
         getArticleCategory()
     }
@@ -68,8 +63,24 @@ class MainActivity : com.akexorcist.library.complexrecyclerview.core.StateHandle
 
     private fun updateArticleGroup(groupId: String?) {
         MockApi.getArticleGroup(groupId)?.let { result ->
-            groupFactory.update(result)
-            groupFactory.toggleGroup(0)
+            groupFactoryList = ArrayList(result.groupList?.map { group ->
+                ArticleGroupFactory(stateHandler).apply {
+                    setListener(articleGroupListener)
+                    update(group)
+                }
+            } ?: listOf())
+
+            val factoryList: ArrayList<Any> = arrayListOf(
+                profileFactory,
+                categoryFactory
+            )
+            factoryList.addAll(groupFactoryList)
+            recyclerView.setFactoryList(arrayListOf(
+                profileFactory,
+                categoryFactory
+            ).apply {
+                addAll(groupFactoryList)
+            })
             recyclerView.adapter?.notifyDataSetChanged()
         }
     }
@@ -83,8 +94,14 @@ class MainActivity : com.akexorcist.library.complexrecyclerview.core.StateHandle
     }
 
     private val articleGroupListener = object : ArticleGroupFactory.Listener {
-        override fun onGroupClick(item: ArticleGroupItem) {
-            groupFactory.toggleGroup(item)
+        override fun onGroupClick(item: ArticleGroupItem, factory: ArticleGroupFactory) {
+            groupFactoryList.forEach { groupFactory ->
+                if (groupFactory == factory) {
+                    groupFactory.toggleGroup()
+                } else {
+                    groupFactory.collapseGroup()
+                }
+            }
             recyclerView.adapter?.notifyDataSetChanged()
         }
 
