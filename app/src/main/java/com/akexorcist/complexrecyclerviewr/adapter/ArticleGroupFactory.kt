@@ -19,20 +19,18 @@ import com.akexorcist.library.complexrecyclerview.state.StateHandler
 
 class ArticleGroupFactory(
     stateHandler: StateHandler
-) : ComplexAdapter.Factory<ArticleGroupResult>(stateHandler) {
+) : ComplexAdapter.Factory<ArticleGroupResult.Group>(stateHandler) {
     private var listener: Listener? = null
 
     override fun build(
-        data: ArticleGroupResult,
-        oldItemList: ArrayList<in ComplexAdapter.Item<ArticleGroupResult, ComplexAdapter.State, RecyclerView.ViewHolder>>?
-    ): ArrayList<in ComplexAdapter.Item<ArticleGroupResult, ComplexAdapter.State, RecyclerView.ViewHolder>> {
+        data: ArticleGroupResult.Group,
+        oldItemList: ArrayList<in ComplexAdapter.Item<ArticleGroupResult.Group, ComplexAdapter.State, RecyclerView.ViewHolder>>?
+    ): ArrayList<in ComplexAdapter.Item<ArticleGroupResult.Group, ComplexAdapter.State, RecyclerView.ViewHolder>> {
         val itemList: ArrayList<Any> = arrayListOf()
-        data.groupList?.forEach { group ->
-            if (group.topicList?.isNotEmpty() == true) {
-                itemList.add(ArticleGroupItem(group, ArticleGroupState(false), ArticleGroupViewHolder::class.java))
-                group.topicList?.forEach { topic ->
-                    itemList.add(ArticleTopicItem(topic, ArticleTopicState(group.id, false), ArticleTopicViewHolder::class.java))
-                }
+        if (data.topicList?.isNotEmpty() == true) {
+            itemList.add(ArticleGroupItem(data, ArticleGroupState(false), ArticleGroupViewHolder::class.java))
+            data.topicList?.forEach { topic ->
+                itemList.add(ArticleTopicItem(topic, ArticleTopicState(data.id, false), ArticleTopicViewHolder::class.java))
             }
         }
         return itemList

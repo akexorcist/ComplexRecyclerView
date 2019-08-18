@@ -1,5 +1,6 @@
 package com.akexorcist.library.complexrecyclerview.core
 
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -8,9 +9,9 @@ import com.akexorcist.library.complexrecyclerview.state.StateHandler
 import java.util.*
 
 class ComplexAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var factoryList: ArrayList<in Factory<Any>> = arrayListOf()
+    private var factoryList: ArrayList<in Factory<out Parcelable>> = arrayListOf()
 
-    fun updateFactoryList(factoryList: ArrayList<in Factory<Any>>) {
+    fun updateFactoryList(factoryList: ArrayList<in Factory<out Parcelable>>) {
         this.factoryList = factoryList
         notifyDataSetChanged()
     }
