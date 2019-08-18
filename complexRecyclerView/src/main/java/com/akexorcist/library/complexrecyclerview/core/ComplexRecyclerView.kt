@@ -1,6 +1,7 @@
 package com.akexorcist.library.complexrecyclerview.core
 
 import android.content.Context
+import android.os.Parcelable
 import android.util.AttributeSet
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,7 +14,7 @@ class ComplexRecyclerView @JvmOverloads constructor(
         const val AUTO_FIT = 100
     }
 
-    fun setFactoryList(factoryList: ArrayList<in ComplexAdapter.Factory<Any>>) {
+    fun setFactoryList(factoryList: ArrayList<in ComplexAdapter.Factory<out Parcelable>>) {
         if (layoutManager != null || layoutManager !is GridLayoutManager) {
             layoutManager = GridLayoutManager(
                 context,
@@ -27,7 +28,7 @@ class ComplexRecyclerView @JvmOverloads constructor(
         (adapter as ComplexAdapter).updateFactoryList(factoryList)
     }
 
-    private fun initSpanSizeLookup(factoryList: ArrayList<in ComplexAdapter.Factory<Any>>): GridLayoutManager.SpanSizeLookup =
+    private fun initSpanSizeLookup(factoryList: ArrayList<in ComplexAdapter.Factory<out Parcelable>>): GridLayoutManager.SpanSizeLookup =
         object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 val pair =

@@ -1,8 +1,10 @@
 package com.akexorcist.library.complexrecyclerview.core
 
+import android.os.Parcelable
+
 object ComplexUtility {
     fun getPositionWithSum(
-        factoryList: ArrayList<in ComplexAdapter.Factory<Any>>,
+        factoryList: ArrayList<in ComplexAdapter.Factory<out Parcelable>>,
         position: Int
     ): Pair<Int, Int> {
         var factoryIndex = -1
