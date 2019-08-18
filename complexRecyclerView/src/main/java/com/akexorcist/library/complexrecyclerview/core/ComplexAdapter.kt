@@ -59,6 +59,8 @@ class ComplexAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         stateHandler: StateHandler
     ) : StateChangedObserver {
         @Suppress("MemberVisibilityCanBePrivate")
+        protected var data: DATA? = null
+        @Suppress("MemberVisibilityCanBePrivate")
         protected var itemList: ArrayList<in Item<DATA, State, RecyclerView.ViewHolder>> = arrayListOf()
 
         init {
@@ -71,7 +73,14 @@ class ComplexAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             data: DATA,
             oldItemList: ArrayList<in Item<DATA, State, RecyclerView.ViewHolder>>? = null
         ) {
-            itemList = build(data, oldItemList)
+            this.data = data
+            this.itemList = build(data, oldItemList)
+        }
+
+        fun refresh() {
+            this.data?.let { data ->
+                this.itemList = build(data, this.itemList)
+            }
         }
 
         fun getStateList() = itemList

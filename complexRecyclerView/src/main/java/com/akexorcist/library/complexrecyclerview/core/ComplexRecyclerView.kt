@@ -14,25 +14,30 @@ class ComplexRecyclerView @JvmOverloads constructor(
     }
 
     fun setFactoryList(factoryList: ArrayList<in ComplexAdapter.Factory<Any>>) {
-        layoutManager =
-            GridLayoutManager(context,
+        if (layoutManager != null || layoutManager !is GridLayoutManager) {
+            layoutManager = GridLayoutManager(
+                context,
                 ACTUAL_COLUMN_COUNT
-            ).apply {
-                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                    override fun getSpanSize(position: Int): Int {
-                        val pair =
-                            ComplexUtility.getPositionWithSum(
-                                factoryList,
-                                position
-                            )
-                        return ((factoryList[pair.first] as ComplexAdapter.Factory<*>).getColumnSizeByItem(
-                            pair.second
-                        ) * 10).toInt()
-                    }
-                }
-            }
-        adapter = ComplexAdapter().apply {
-            updateFactoryList(factoryList)
+            )
         }
+        (layoutManager as GridLayoutManager).spanSizeLookup = initSpanSizeLookup(factoryList)
+        if (adapter == null || adapter !is ComplexAdapter) {
+            adapter = ComplexAdapter()
+        }
+        (adapter as ComplexAdapter).updateFactoryList(factoryList)
     }
+
+    private fun initSpanSizeLookup(factoryList: ArrayList<in ComplexAdapter.Factory<Any>>): GridLayoutManager.SpanSizeLookup =
+        object : GridLayoutManager.SpanSizeLookup() {
+            override fun getSpanSize(position: Int): Int {
+                val pair =
+                    ComplexUtility.getPositionWithSum(
+                        factoryList,
+                        position
+                    )
+                return ((factoryList[pair.first] as ComplexAdapter.Factory<*>).getColumnSizeByItem(
+                    pair.second
+                ) * 10).toInt()
+            }
+        }
 }
